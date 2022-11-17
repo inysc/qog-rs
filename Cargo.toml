@@ -1,5 +1,5 @@
 [package]
-authors = "SunspotsInys <inysuay@gmail.com>"
+authors = ["SunspotsInys <inysuay@gmail.com>"]
 description = "An extremely simple log library."
 edition = "2021"
 keywords = ["log", "qiu"]
