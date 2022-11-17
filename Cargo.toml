@@ -3,9 +3,11 @@ authors = ["SunspotsInys <inysuay@gmail.com>"]
 description = "An extremely simple log library."
 edition = "2021"
 keywords = ["log", "qiu"]
+license = "BSD-2-Clause license"
+license-file = "LICENSE"
 name = "qog"
-version = "0.1.0"
 repository = "https://github.com/inysc/qog-rs"
+version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
