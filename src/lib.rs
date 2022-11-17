@@ -36,7 +36,8 @@ fn now_fmt() -> String {
 // milli: 相对于 1970-01-01 00:00:00.000 的毫秒数
 fn milli_fmt(milli: u128) -> String {
     // 加上 1970-01-01 00:00:00.000 相对于 0000-01-01 00:00:00.000 的毫秒数
-    let milli = milli + 62135596800000;
+    // 转到东八时区（北京）
+    let milli = milli + 62135596800000 + 8 * MILLIS_SECONDS_PER_HOUR;
     let mut d = milli / MILLIS_SECONDS_PER_DAY;
 
     // Account for 400 year cycles.
