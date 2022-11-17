@@ -70,7 +70,11 @@ fn milli_fmt(milli: u128) -> String {
         if day > 31 + 29 - 1 {
             day -= 1;
         } else if day == 31 + 29 - 1 {
-            return format!("{}-02-29", year);
+            let (hour, min, sec, mils) = clock(milli);
+            return format!(
+                "{}-02-29 {:0>2}:{:0>2}:{:0>2}.{:0<3}",
+                year, hour, min, sec, mils
+            );
         }
     }
 
@@ -87,6 +91,16 @@ fn milli_fmt(milli: u128) -> String {
     month += 1; // because January is 1
     day = day - begin + 1;
 
+    let (hour, min, sec, mils) = clock(milli);
+
+    format!(
+        "{}-{:0>2}-{:0>2} {:0>2}:{:0>2}:{:0>2}.{:0<3}",
+        year, month, day, hour, min, sec, mils
+    )
+}
+
+#[inline]
+fn clock(milli: u128) -> (u128, u128, u128, u128) {
     let mut mils = milli % MILLIS_SECONDS_PER_DAY;
     let hour = mils / MILLIS_SECONDS_PER_HOUR;
     mils -= hour * MILLIS_SECONDS_PER_HOUR;
@@ -95,10 +109,7 @@ fn milli_fmt(milli: u128) -> String {
     let sec = mils / MILLIS_SECONDS_PER_SECOND;
     mils -= sec * MILLIS_SECONDS_PER_SECOND;
 
-    format!(
-        "{}-{:0>2}-{:0>2} {:0>2}:{:0>2}:{:0>2}.{:0<3}",
-        year, month, day, hour, min, sec, mils
-    )
+    (hour, min, sec, mils)
 }
 
 #[inline]
