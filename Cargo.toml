@@ -1,9 +1,12 @@
 [package]
-name = "qog-rs"
-version = "0.1.0"
+authors = "SunspotsInys <inysuay@gmail.com>"
+description = "An extremely simple log library."
 edition = "2021"
+keywords = ["log", "qiu"]
+name = "qog"
+version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-log = { version = "^0.4", features = ["std"] }
+log = {version = "^0.4", features = ["std"]}
