@@ -1,5 +1,7 @@
 use log;
 
+use std::io::Write;
+
 const MILLIS_SECONDS_PER_SECOND: u128 = 1000;
 const MILLIS_SECONDS_PER_MINUTE: u128 = 60 * 1000;
 const MILLIS_SECONDS_PER_HOUR: u128 = 60 * MILLIS_SECONDS_PER_MINUTE;
@@ -35,7 +37,7 @@ fn now_fmt() -> String {
 
 // milli: 相对于 1970-01-01 00:00:00.000 的毫秒数
 fn milli_fmt(milli: u128) -> String {
-    // 加上 1970-01-01 00:00:00.000 相对于 0000-01-01 00:00:00.000 的毫秒数
+    // 加上 1970-01-01 00:00:00.000 相对于 0001-01-01 00:00:00.000 的毫秒数
     // 转到东八时区（北京）
     let milli = milli + 62135596800000 + 8 * MILLIS_SECONDS_PER_HOUR;
     let mut d = milli / MILLIS_SECONDS_PER_DAY;
@@ -119,11 +121,20 @@ fn is_leap(year: u128) -> bool {
 
 pub struct Qog {
     lvl: log::Level,
+    file: std::sync::Mutex<std::io::BufWriter<std::fs::File>>,
 }
 
 impl Qog {
-    pub fn new(lvl: log::Level, _filename: String) -> Self {
-        Qog { lvl }
+    pub fn new(lvl: log::Level, filename: String) -> Self {
+        let f = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(filename)
+            .expect("cannot open file");
+        Qog {
+            lvl,
+            file: std::sync::Mutex::new(std::io::BufWriter::new(f)),
+        }
     }
 
     pub fn init(self) {
@@ -138,7 +149,21 @@ impl Qog {
     }
 
     pub fn default() {
-        Self::new(log::Level::Debug, String::from("")).init();
+        Self::new(log::Level::Debug, String::from("qog.log")).init();
+    }
+
+    pub fn write(&self, msg: &String) {
+        match self.file.lock() {
+            Ok(mut file) => {
+                if let Err(err) = file.write(msg.as_bytes()) {
+                    eprintln!("failed to write<{}>", err)
+                };
+                if let Err(err) = file.flush() {
+                    eprintln!("failed to flush<{}>", err)
+                };
+            }
+            Err(err) => eprintln!("failed to lock the log file<{}>", err),
+        }
     }
 }
 
@@ -151,15 +176,15 @@ impl log::Log for Qog {
         if !self.enabled(record.metadata()) {
             return;
         }
-
-        println!(
-            "{}|{:5}|{}:{}|{}",
+        let msg = format!(
+            "{}|{:5}|{}:{}|{}\n",
             now_fmt(),
             record.level(),
             record.target(),
             record.line().unwrap_or(0),
             record.args()
-        )
+        );
+        self.write(&msg)
     }
 
     fn flush(&self) {
