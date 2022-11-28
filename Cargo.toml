@@ -3,7 +3,6 @@ authors = ["SunspotsInys <inysuay@gmail.com>"]
 description = "An extremely simple log library."
 edition = "2021"
 keywords = ["log", "qiu"]
-license = "BSD-2-Clause"
 license-file = "LICENSE"
 name = "qog"
 repository = "https://github.com/inysc/qog-rs"

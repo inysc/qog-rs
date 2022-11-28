@@ -121,6 +121,7 @@ fn is_leap(year: u128) -> bool {
 
 pub struct Qog {
     lvl: log::Level,
+    systemctl: bool,
     file: std::sync::Mutex<std::io::BufWriter<std::fs::File>>,
 }
 
@@ -133,6 +134,7 @@ impl Qog {
             .expect("cannot open file");
         Qog {
             lvl,
+            systemctl: std::os::unix::process::parent_id() == 1,
             file: std::sync::Mutex::new(std::io::BufWriter::new(f)),
         }
     }
@@ -153,6 +155,9 @@ impl Qog {
     }
 
     pub fn write(&self, msg: &String) {
+        if !self.systemctl {
+            print!("{}", msg);
+        }
         match self.file.lock() {
             Ok(mut file) => {
                 if let Err(err) = file.write(msg.as_bytes()) {
