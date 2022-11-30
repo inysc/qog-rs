@@ -120,13 +120,13 @@ fn is_leap(year: u128) -> bool {
 }
 
 pub struct Qog {
+    stdout: bool,
     lvl: log::Level,
-    systemctl: bool,
-    file: std::sync::Mutex<std::io::BufWriter<std::fs::File>>,
+    file: std::sync::Mutex<std::fs::File>,
 }
 
 impl Qog {
-    pub fn new(lvl: log::Level, filename: String) -> Self {
+    pub fn new(need_stdout: bool, lvl: log::Level, filename: String) -> Self {
         let f = std::fs::OpenOptions::new()
             .create(true)
             .append(true)
@@ -134,8 +134,8 @@ impl Qog {
             .expect("cannot open file");
         Qog {
             lvl,
-            systemctl: std::os::unix::process::parent_id() == 1,
-            file: std::sync::Mutex::new(std::io::BufWriter::new(f)),
+            stdout: need_stdout && std::os::unix::process::parent_id() != 1,
+            file: std::sync::Mutex::new(f),
         }
     }
 
@@ -151,20 +151,17 @@ impl Qog {
     }
 
     pub fn default() {
-        Self::new(log::Level::Debug, String::from("qog.log")).init();
+        Self::new(true, log::Level::Debug, String::from("qog.log")).init();
     }
 
     pub fn write(&self, msg: &String) {
-        if !self.systemctl {
+        if self.stdout {
             print!("{}", msg);
         }
         match self.file.lock() {
             Ok(mut file) => {
                 if let Err(err) = file.write(msg.as_bytes()) {
                     eprintln!("failed to write<{}>", err)
-                };
-                if let Err(err) = file.flush() {
-                    eprintln!("failed to flush<{}>", err)
                 };
             }
             Err(err) => eprintln!("failed to lock the log file<{}>", err),
@@ -182,7 +179,7 @@ impl log::Log for Qog {
             return;
         }
         let msg = format!(
-            "{}|{:5}|{}:{}|{}\n",
+            "{}|{:5}|{}:{}|,{}\n",
             now_fmt(),
             record.level(),
             record.target(),
